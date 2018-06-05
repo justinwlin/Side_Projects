@@ -111,11 +111,24 @@ class tickerManager:
 
 def init(fileName):
     orderBook = tickerManager()
+    control = True
     with open(fileName) as f:
         for line in f:
             lineList = line.split(",")
             tempOrder = Order(lineList[0], lineList[1], lineList[2], lineList[3], lineList[4], lineList[5])
             orderBook.processOrder(tempOrder)
+    while(control):
+        print("Would you like to place an order?")
+        print("Format: Time, name, ticker, buy/sell, volume, price")
+        userInput = input()
+        userInput = userInput.replace(" ", "")
+        if(userInput == "quit"):
+            break
+
+        lineList = userInput.split(",")
+        tempOrder = Order(lineList[0], lineList[1], lineList[2], lineList[3], lineList[4], lineList[5])
+        orderBook.processOrder(tempOrder)
+
 
 
 init("m.csv")
