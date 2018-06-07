@@ -3,6 +3,7 @@ import csv
 import random
 import collections
 
+#Order
 class Order:
     def __init__(self, time, name, ticker, BorS, volume, price):
         self.time = time
@@ -12,12 +13,13 @@ class Order:
         self.volume = int(volume)
         self.price = int(price)
 
-class miniOrder:
+class OrderBook:
     def __init__(self):
-        self.heapBuy = []
-        self.heapSell = []
-        self.mapOfPrices = {}
+        self.heapBuy = [] #Keep track of Buy Keys
+        self.heapSell = [] #Keep Track of Sell Keys
+        self.mapOfPrices = {} #Range of Prices
 
+    #Process Order: Decides whether the order gets fulfilled or simply added to the buy/sell side
     def processOrder(self, order):
         if(order.BorS == "buy"):
             #If the HeapSell has no orders... Just add order to buy list
@@ -39,6 +41,7 @@ class miniOrder:
             else: #Else just add order to the sell side
                 self.addOrder(order)
 
+    #Logic to Match Orders
     def fulfillOrder(self, order, transactionType):
         if(transactionType == "buy"):
             #Grab the Key from Sell Heap
@@ -51,6 +54,7 @@ class miniOrder:
                 if(len(self.mapOfPrices[key])==0):
                     heapq.heappop(self.heapSell)
                 self.processOrder(order) #Reprocess to Check if there are more orders to fulfill
+                #Basically if there are two separate orders with the same price, once the first one is popped in queue, reprocess to check.
                 print("Reprocessing")
             elif(order.volume < volumeAvaliable):
                 print("Order has been fully fulfilled; Lowest Sell Order Partially Filled")
@@ -82,41 +86,48 @@ class miniOrder:
                     if (len(self.mapOfPrices[key]) == 0):
                         heapq.heappop(self.heapBuy)
 
+    #Adds Orders to heap/map if orders can't be fulfilled
     def addOrder(self, order):
         #Pushes Onto the Heap the Price
         if(order.BorS == "buy"):
-            if order.price not in self.mapOfPrices:
+            #Make sure that the heap doesn't have two of the same key
+            if order.price not in self.mapOfPrices: 
                 heapq.heappush(self.heapBuy, order.price)
         else:
             if order.price not in self.mapOfPrices:
                 heapq.heappush(self.heapSell, order.price)
 
-        #Add to a map with Queues
+        #Add to a map to keep track of prices and orders
         if order.price not in self.mapOfPrices:
             self.mapOfPrices[order.price] = collections.deque()
             self.mapOfPrices[order.price].append(order)
         elif order.price in self.mapOfPrices:
             self.mapOfPrices[order.price].append(order)
 
+#Helps create a separation for all the different Ticket Prices
 class tickerManager:
     def __init__(self):
         self.tickerKeys = {}
     def processOrder(self, order):
         if(order.ticker not in self.tickerKeys):
             #Create a Mini Order Book related to that Ticker
-            self.tickerKeys[order.ticker] = miniOrder()
+            self.tickerKeys[order.ticker] = OrderBook()
             self.tickerKeys[order.ticker].addOrder(order)
         else:
             self.tickerKeys[order.ticker].processOrder(order)
 
+#Inits the File
 def init(fileName):
-    orderBook = tickerManager()
+    tickerM = tickerManager()
     control = True
+    #Reading Through CSV File
     with open(fileName) as f:
         for line in f:
             lineList = line.split(",")
             tempOrder = Order(lineList[0], lineList[1], lineList[2], lineList[3], lineList[4], lineList[5])
-            orderBook.processOrder(tempOrder)
+            tickerM.processOrder(tempOrder)
+
+    #User Input Loop
     while(control):
         print("Would you like to place an order?")
         print("Format: Time, name, ticker, buy/sell, volume, price")
@@ -127,7 +138,7 @@ def init(fileName):
 
         lineList = userInput.split(",")
         tempOrder = Order(lineList[0], lineList[1], lineList[2], lineList[3], lineList[4], lineList[5])
-        orderBook.processOrder(tempOrder)
+        tickerM.processOrder(tempOrder)
 
 
 
