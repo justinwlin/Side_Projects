@@ -1,6 +1,6 @@
 # How to Run
 
-Will run with just basic python 3.0+. 
+Will run with just basic python 3.0+ and Numpy.
 
 ## Future Improvements if Revisted:
   - [x] Allow for User to have continous inputs
